@@ -31,4 +31,3 @@ jobs:
     - name: Run Random Number Generator script
 
       run: python random_number_generator.py
-

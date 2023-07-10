@@ -1,32 +1,35 @@
 import math
-from scipy.stats import norm
 
-def calculate_rejection_region(alpha, n, clt=True):
-    """Calculates the rejection region based on alpha and sample size."""
+def calculate_critical_value(alpha, n, clt=True):
+    """Calculates the critical value based on alpha and sample size."""
     if clt:
-        z_critical = norm.ppf(1 - alpha)
-        rejection_region = (z_critical * math.sqrt(n), float('inf'))
+        z_critical = 1.96  # For a 95% confidence level (two-tailed test)
+        critical_value = z_critical * math.sqrt(n)
     else:
         t_critical = n - 1
-        rejection_region = (t_critical, float('inf'))
-    return rejection_region
+        critical_value = t_critical
+    return critical_value
+
+def calculate_cumulative_probability(z):
+    """Calculates the cumulative probability for a standard normal distribution."""
+    return (1.0 + math.erf(z / math.sqrt(2.0))) / 2.0
 
 def perform_hypothesis_test(sample_mean, population_mean, standard_deviation, alpha, n, alternative='two-sided', clt=True):
     """Performs a hypothesis test based on the given parameters."""
     z = (sample_mean - population_mean) / (standard_deviation / math.sqrt(n))
 
     if alternative == 'right':
-        rejection_region = calculate_rejection_region(alpha, n, clt)
-        p_value = 1 - norm.cdf(z)
-        reject_null = z > rejection_region[0]
+        critical_value = calculate_critical_value(alpha, n, clt)
+        p_value = 1 - calculate_cumulative_probability(z)
+        reject_null = z > critical_value
     elif alternative == 'left':
-        rejection_region = calculate_rejection_region(alpha, n, clt)
-        p_value = norm.cdf(z)
-        reject_null = z < -rejection_region[0]
+        critical_value = calculate_critical_value(alpha, n, clt)
+        p_value = calculate_cumulative_probability(z)
+        reject_null = z < -critical_value
     else:  # two-sided
-        rejection_region = calculate_rejection_region(alpha / 2, n, clt)
-        p_value = 2 * (1 - norm.cdf(abs(z)))
-        reject_null = abs(z) > rejection_region[0]
+        critical_value = calculate_critical_value(alpha / 2, n, clt)
+        p_value = 2 * (1 - calculate_cumulative_probability(abs(z)))
+        reject_null = abs(z) > critical_value
 
     return p_value, reject_null
 
@@ -50,3 +53,4 @@ print(f"Alternative: {alternative}")
 print(f"Using CLT: {clt}")
 print(f"P-value: {p_value}")
 print(f"Reject Null Hypothesis: {reject_null}")
+
